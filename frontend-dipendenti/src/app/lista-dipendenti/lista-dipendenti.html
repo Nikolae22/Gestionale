@@ -1,0 +1,430 @@
+<div class="main-wrapper">
+
+  <!-- COMPONENTE FILTRO DEDICATO -->
+  <app-filtro-dipendenti
+    [ruoli]="ruoli()"
+    (cerca)="cercaPerRuoloEStipendio($event)"
+    (cercaEmail)="cercaPerEmail($event)"
+    (reset)="resetFiltro()">
+  </app-filtro-dipendenti>
+
+  <!-- SEZIONE TABELLA DIPENDENTI -->
+  <div class="card-container">
+    <div class="header-actions">
+      <div>
+        <h2>Lista Dipendenti</h2>
+        <p class="subtitle">Gestisci il personale, i ruoli e gli account aziendali</p>
+      </div>
+      <button class="btn btn-add" (click)="cambiaModalita('INSERIMENTO')">
+        <svg width="16" height="16" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor"
+         stroke-width="2.5">
+         <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nuovo Dipendente
+      </button>
+    </div>
+
+    @if (messaggioSuccesso()) {
+      <div class="alert alert-success">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        {{ messaggioSuccesso() }}
+      </div>
+    }
+
+    <div class="table-responsive">
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Dipendente</th>
+            <th>Email Aziendale</th>
+            <th>Ruolo</th>
+            <th>Stipendio</th>
+            <th>Data Assunzione</th>
+            <th class="text-end">Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (dip of listaDipendenti(); track dip.id) {
+            <tr>
+              <td>
+                <button class="link-nome" (click)="cambiaModalita('INFO', dip)">
+                  <span class="avatar-sm">{{ dip.nome.charAt(0) }}</span>
+                  <div class="user-info">
+                    <span class="full-name">{{ dip.nome }} {{ dip.cognome }}</span>
+                  </div>
+                </button>
+              </td>
+              <td class="text-muted">{{ dip.account.emailAziendale }}</td>
+              <td>
+                <span class="badge" [attr.data-role]="dip.account.ruolo">{{ dip.account.ruolo || 'N/D' }}</span>
+              </td>
+              <td class="bold">{{ dip.stipendio | currency:'EUR':'symbol':'1.2-2' }}</td>
+              <td class="text-muted">{{ dip.dataAssunzione | date:'dd/MM/yyyy' }}</td>
+              <td class="text-end">
+                <button class="btn btn-edit" (click)="cambiaModalita('MODIFICA', dip)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  Modifica
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="chiediConfermaEliminazione(dip, $event)">
+    Elimina
+  </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty-state">
+                <div class="empty-box">
+                  <p>Nessun dipendente trovato</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CONTROLLI PAGINAZIONE -->
+    <div class="pagination-bar d-flex justify-content-between align-items-center mt-3 p-2">
+      <span class="text-muted">
+        Pagina <strong>{{ currentPage() + 1 }}</strong> di <strong>{{ totalPages() }}</strong>
+        (Totale: {{ totalElements() }} dipendenti)
+      </span>
+
+      <div class="btn-group">
+        <button
+          class="btn btn-secondary me-2"
+          [disabled]="isFirst() || currentPage() === 0"
+          (click)="paginaPrecedente()">
+          &laquo; Indietro
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          [disabled]="isLast() || (currentPage() + 1)>=totalPages()"
+          (click)="paginaSuccessiva()">
+          Avanti &raquo;
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SFONDO SCURO (OVERLAY) -->
+  @if (isDrawerAperto()) {
+    <div class="drawer-overlay" (click)="clickSulloSfondo()"></div>
+  }
+
+  <!-- DRAWER LATERALE -->
+  <div class="drawer" [class.drawer-open]="isDrawerAperto()">
+
+    <!-- INTESTAZIONE DRAWER -->
+    <div class="drawer-header">
+      <div>
+        @if (modalita() === 'INFO') {
+          <h3>Informazioni Dipendente</h3>
+          <p class="drawer-subtitle">Dettagli anagrafici e contrattuali</p>
+        } @else if (modalita() === 'MODIFICA') {
+          <h3>Modifica Dipendente</h3>
+          <p class="drawer-subtitle">Aggiorna le informazioni nel sistema</p>
+        } @else if (modalita() === 'INSERIMENTO') {
+          <h3>Nuovo Dipendente</h3>
+          <p class="drawer-subtitle">Aggiungi un nuovo membro al team</p>
+        }
+      </div>
+
+      <button class="btn-close" (click)="cambiaModalita('LISTA')">✕</button>
+    </div>
+
+<!-- 1. CONTENUTO DRAWER: SOLA LETTURA (INFO) -->
+@if (modalita() === 'INFO' && dipendenteSelezionato()) {
+  <div class="drawer-body info-body">
+
+    <!-- HEADER PROFILO -->
+    <div class="profile-card">
+      <div class="avatar-lg">{{ dipendenteSelezionato()?.nome?.charAt(0) }}</div>
+      <h4>{{ dipendenteSelezionato()?.nome }} {{ dipendenteSelezionato()?.cognome }}</h4>
+      <span class="badge" [attr.data-role]="dipendenteSelezionato()?.account?.ruolo">
+        {{ dipendenteSelezionato()?.account?.ruolo }}
+      </span>
+    </div>
+
+    <!-- DATI ANAGRAFICI -->
+    <div class="info-section">
+      <span class="section-title">Dati Anagrafici</span>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Età</span>
+          <span class="val">{{ dipendenteSelezionato()?.eta }} anni</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Data di Nascita</span>
+          <span class="val">{{ dipendenteSelezionato()?.dataNascita | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="info-item span-2">
+          <span class="label">Codice Fiscale</span>
+          <span class="val font-mono">{{ dipendenteSelezionato()?.codiceFiscale }}</span>
+        </div>
+        <div class="info-item span-2">
+          <span class="label">Email Personale</span>
+          <span class="val">{{ dipendenteSelezionato()?.email }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATI ACCOUNT & CONTRATTO -->
+    <div class="info-section">
+      <span class="section-title">Dati Contratuali & Account</span>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Data Assunzione</span>
+          <span class="val">{{ dipendenteSelezionato()?.dataAssunzione | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Username</span>
+          <span class="val font-mono">{{ dipendenteSelezionato()?.account?.username }}</span>
+        </div>
+        <div class="info-item span-2">
+          <span class="label">Email Aziendale</span>
+          <span class="val">{{ dipendenteSelezionato()?.account?.emailAziendale }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEZIONE NUOVA: ANALISI COSTI AZIENDALI & STIPENDIO -->
+    <div class="info-section highlight-box">
+      <span class="section-title text-primary">📊 Prospetto Economico & Costo Azienda</span>
+
+      <div class="costi-grid">
+        <!-- STIPENDIO NETTO -->
+        <div class="costo-card netto">
+          <span class="costo-title">Stipendio Netto</span>
+          <div class="costo-val">{{ costiDipendente().nettoMensile | currency:'EUR':'symbol':'1.0-0' }} <small>/mese</small></div>
+          <span class="costo-sub">Annuale: {{ costiDipendente().nettoAnnuale | currency:'EUR':'symbol':'1.0-0' }}</span>
+        </div>
+
+        <!-- RAL LORDA -->
+        <div class="costo-card lordo">
+          <span class="costo-title">RAL (Lordo)</span>
+          <div class="costo-val">{{ costiDipendente().ralAnnuale | currency:'EUR':'symbol':'1.0-0' }} <small>/anno</small></div>
+          <span class="costo-sub">Mensile: {{ costiDipendente().lordoMensile | currency:'EUR':'symbol':'1.0-0' }}</span>
+        </div>
+
+        <!-- COSTO TOTALE AZIENDA -->
+        <div class="costo-card azienda">
+          <span class="costo-title">Costo Totale Azienda</span>
+          <div class="costo-val text-danger">{{ costiDipendente().costoAnnualeAzienda | currency:'EUR':'symbol':'1.0-0' }} <small>/anno</small></div>
+          <span class="costo-sub">Spesa Mensile: {{ costiDipendente().costoMensileAzienda | currency:'EUR':'symbol':'1.0-0' }}</span>
+        </div>
+
+        <!-- TASSE E CONTRIBUTI -->
+        <div class="costo-card tasse">
+          <span class="costo-title">Tasse & Contributi Totali</span>
+          <div class="costo-val text-warning">{{ costiDipendente().tasseContributiAnnuali | currency:'EUR':'symbol':'1.0-0' }} <small>/anno</small></div>
+          <span class="costo-sub">Mensile: {{ costiDipendente().tasseContributiMensili | currency:'EUR':'symbol':'1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+
+   <div class="drawer-actions d-flex justify-content-between align-items-center">
+      <button class="btn btn-danger" (click)="chiediConfermaEliminazione(dipendenteSelezionato()!)">
+        🗑️ Elimina Dipendente
+      </button>
+      <div>
+        <button class="btn btn-secondary me-2" (click)="cambiaModalita('LISTA')">Chiudi</button>
+        <button class="btn btn-edit-primary" (click)="cambiaModalita('MODIFICA', dipendenteSelezionato()!)">✏️ Modifica Dati</button>
+      </div>
+    </div>
+  </div>
+}
+
+    <!-- 2. CONTENUTO DRAWER: FORM (INSERIMENTO / MODIFICA) -->
+    @if (modalita() === 'INSERIMENTO' || modalita() === 'MODIFICA') {
+      <div class="drawer-body">
+
+        @if (dipendenteForm.errors?.['stipendioFuoriRange']) {
+          <div class="alert alert-danger">{{ dipendenteForm.errors?.['stipendioFuoriRange'] }}</div>
+        }
+        @if (dipendenteForm.errors?.['etaNonValida']) {
+          <div class="alert alert-danger">{{ dipendenteForm.errors?.['etaNonValida'] }}</div>
+        }
+        @if (messaggioErrore()) {
+          <div class="alert alert-danger">{{ messaggioErrore() }}</div>
+        }
+
+        <form [formGroup]="dipendenteForm" (ngSubmit)="salvaDipendente()" class="modern-form">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nome *</label>
+              <input type="text" formControlName="nome" class="form-control" [class.is-invalid]="isCampoInvalido('nome')" placeholder="es. Mario">
+              @if (isCampoInvalido('nome')) {
+                <span class="error-msg">Nome obbligatorio</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Cognome *</label>
+              <input type="text" formControlName="cognome" class="form-control" [class.is-invalid]="isCampoInvalido('cognome')" placeholder="es. Rossi">
+              @if (isCampoInvalido('cognome')) {
+                <span class="error-msg">Cognome obbligatorio</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Età *</label>
+              <input type="number" formControlName="eta" class="form-control" [class.is-invalid]="isCampoInvalido('eta')" placeholder="30">
+              @if (isCampoInvalido('eta')) {
+                <span class="error-msg">Età non valida</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Data Nascita *</label>
+              <input type="date" formControlName="dataNascita" class="form-control" [class.is-invalid]="isCampoInvalido('dataNascita')">
+              @if (isCampoInvalido('dataNascita')) {
+                @if (dipendenteForm.get('dataNascita')?.errors?.['required']) {
+                  <span class="error-msg">Campo obbligatorio</span>
+                }
+                @if (dipendenteForm.get('dataNascita')?.errors?.['minoreEta']) {
+                  <span class="error-msg">{{ dipendenteForm.get('dataNascita')?.errors?.['minoreEta'] }}</span>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Email Personale *</label>
+            <input type="email" formControlName="email" class="form-control" [class.is-invalid]="isCampoInvalido('email')" placeholder="mario.rossi@gmail.com">
+            @if (isCampoInvalido('email')) {
+              <span class="error-msg">Inserisci un'email valida</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Codice Fiscale *</label>
+            <input type="text" formControlName="codiceFiscale" maxlength="16" class="form-control uppercase" [class.is-invalid]="isCampoInvalido('codiceFiscale')" placeholder="RSSMRA80A01H501U">
+            @if (isCampoInvalido('codiceFiscale')) {
+              <span class="error-msg">Formato Codice Fiscale non valido (16 car.)</span>
+            }
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Stipendio (€) *</label>
+              <input type="number" step="0.01" formControlName="stipendio" class="form-control" [class.is-invalid]="isCampoInvalido('stipendio')" placeholder="25000">
+              @if (isCampoInvalido('stipendio')) {
+                <span class="error-msg">Importo non valido</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Data Assunzione *</label>
+              <input type="date" formControlName="dataAssunzione" class="form-control" [class.is-invalid]="isCampoInvalido('dataAssunzione')">
+              @if (isCampoInvalido('dataAssunzione')) {
+                <span class="error-msg">Data obbligatoria</span>
+              }
+            </div>
+          </div>
+
+          <!-- SUBFORM ACCOUNT AZIENDALE -->
+          <div formGroupName="account" class="account-subform">
+            <div class="subform-header">
+              <h4>Account Aziendale</h4>
+              <p>Credenziali di accesso e permessi</p>
+            </div>
+
+            <div class="form-group">
+              <label>Username *</label>
+              <input type="text" formControlName="username" class="form-control" [class.is-invalid]="isCampoInvalido('username', 'account')" placeholder="m.rossi">
+              @if (isCampoInvalido('username', 'account')) {
+                <span class="error-msg">Username obbligatorio</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Email Aziendale *</label>
+              <input type="email" formControlName="emailAziendale" class="form-control" [class.is-invalid]="isCampoInvalido('emailAziendale', 'account')" placeholder="m.rossi@azienda.com">
+              @if (isCampoInvalido('emailAziendale', 'account')) {
+                <span class="error-msg">Email aziendale non valida</span>
+              }
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Password {{ modalita() === 'MODIFICA' ? '(Opzionale)' : '*' }}</label>
+                <input type="password" formControlName="password" class="form-control" [class.is-invalid]="isCampoInvalido('password', 'account')" placeholder="••••••••">
+                @if (isCampoInvalido('password', 'account')) {
+                  <span class="error-msg">Minimo 8 caratteri</span>
+                }
+              </div>
+
+              <div class="form-group">
+                <label>Ruolo Aziendale *</label>
+                <select formControlName="ruolo" class="form-control" [class.is-invalid]="isCampoInvalido('ruolo', 'account')">
+                  <option value="" disabled selected>Seleziona un ruolo</option>
+                  @for (r of ruoli(); track r) {
+                    <option [value]="r">{{ r }}</option>
+                  }
+                </select>
+                @if (isCampoInvalido('ruolo', 'account')) {
+                  <span class="error-msg">Seleziona un ruolo</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- TASTI ANNULLA E SALVA -->
+          <div class="drawer-footer">
+            <button type="button" class="btn btn-cancel" (click)="cambiaModalita('LISTA')">Annulla</button>
+            <button type="submit" class="btn btn-primary" [disabled]="dipendenteForm.invalid">
+              {{ modalita() === 'MODIFICA' ? 'Salva Modifiche' : 'Crea Dipendente' }}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    }
+
+  </div>
+</div>
+
+
+<!-- MODAL DI CONFERMA ELIMINAZIONE (STILE BIG TECH) -->
+@if (mostraModalConf()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content shadow-lg border-0 rounded-4">
+
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-danger">Conferma Eliminazione</h5>
+          <button type="button" class="btn-close" (click)="annullaEliminazione()"></button>
+        </div>
+
+        <div class="modal-body py-4">
+          <p class="mb-1">Sei sicuro di voler eliminare permanentemente questo dipendente?</p>
+          <p class="fw-bold text-dark fs-5 mb-0">
+            {{ dipendenteDaEleminare()?.nome }} {{ dipendenteDaEleminare()?.cognome }}
+          </p>
+          <small class="text-muted d-block mt-1">C.F.: {{ dipendenteDaEleminare()?.codiceFiscale }}</small>
+
+          <div class="alert alert-danger mt-3 mb-0 fs-7">
+            ⚠️ <strong>Attenzione:</strong> Questa azione è irreversibile e rimuoverà definitivamente il dipendente dal database.
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light px-4 rounded-3" (click)="annullaEliminazione()">
+            Annulla
+          </button>
+          <button type="button" class="btn btn-danger px-4 rounded-3 fw-bold" (click)="confermaEliminazione()">
+            Sì, Elimina
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

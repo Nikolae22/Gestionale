@@ -1,0 +1,126 @@
+<div class="stats-page">
+  
+  <!-- HEADER -->
+  <div class="stats-header">
+    <div>
+      <h2>📊 Dashboard Statistiche & Costi Aziendali</h2>
+      <p>Panoramica finanziaria complessiva su base mensile e annuale del personale.</p>
+    </div>
+    <a routerLink="/dipendenti" class="btn-back">⬅ Torna alla Gestione Dipendenti</a>
+  </div>
+
+  <div *ngIf="messaggioErrore()" class="alert error">
+    {{ messaggioErrore() }}
+  </div>
+
+  <div *ngIf="isLoading()" class="loading-spinner">
+    Caricamento dati in corso...
+  </div>
+
+  <div *ngIf="!isLoading()">
+
+    <!-- KPI GRID -->
+    <div class="kpi-grid">
+      
+      <!-- Card 1: Dipendenti Totali -->
+      <div class="kpi-card">
+        <div class="kpi-icon icon-users">👥</div>
+        <div class="kpi-info">
+          <span class="kpi-title">Dipendenti Assunti</span>
+          <span class="kpi-value">{{ totaleAssunti() }}</span>
+          <span class="kpi-sub">Organico complessivo</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Spesa Mensile Netta -->
+      <div class="kpi-card">
+        <div class="kpi-icon icon-monthly">📅</div>
+        <div class="kpi-info">
+          <span class="kpi-title">Spesa Mensile Netta</span>
+          <span class="kpi-value">{{ totaleNettoMensile() | currency:'EUR':'symbol':'1.0-0' }}</span>
+          <span class="kpi-sub">Netto in busta paga (mensile)</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Contributi e Tasse Annuali -->
+      <div class="kpi-card highlight-warning">
+        <div class="kpi-icon icon-taxes">🏦</div>
+        <div class="kpi-info">
+          <span class="kpi-title">Contributi & Tasse Annuali</span>
+          <span class="kpi-value text-warning">{{ totaleContributiETasseAnnuali() | currency:'EUR':'symbol':'1.0-0' }}</span>
+          <span class="kpi-sub">Totale versato ad enti / Stato</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Costo Totale Annuale Azienda -->
+      <div class="kpi-card highlight-primary">
+        <div class="kpi-icon icon-total">💰</div>
+        <div class="kpi-info">
+          <span class="kpi-title">Costo Annuo Totale Azienda</span>
+          <span class="kpi-value text-primary">{{ costoTotaleAnnualeAzienda() | currency:'EUR':'symbol':'1.0-0' }}</span>
+          <span class="kpi-sub">Stipendi (13 m.) + Tasse + Contributi</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DETAILS BOX: BREAKDOWN ANNUALE -->
+    <div class="summary-box">
+      <h3>📈 Sintesi Finanziaria Annuale</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span>Stipendi Netti Annuali (13 mensilità):</span>
+          <strong>{{ totaleNettoAnnuale() | currency:'EUR':'symbol':'1.0-0' }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Monte RAL Lordo Annuale (stimato):</span>
+          <strong>{{ totaleRalAnnuale() | currency:'EUR':'symbol':'1.0-0' }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Costo Medio per Dipendente / Anno:</span>
+          <strong>{{ (totaleAssunti() > 0 ? costoTotaleAnnualeAzienda() / totaleAssunti() : 0) | currency:'EUR':'symbol':'1.0-0' }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELLA SPESE PER RUOLO -->
+    <div class="table-card">
+      <h3>💼 Ripartizione Spese per Ruolo</h3>
+      
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Ruolo</th>
+            <th>Dipendenti</th>
+            <th>Spesa Mensile (Netta)</th>
+            <th>Spesa Annuale (Netta)</th>
+            <th>Costo Azienda (Annuale)</th>
+            <th>Impatto Budget</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of statsPerRuolo()">
+            <td>
+              <span class="role-badge">{{ item.ruolo }}</span>
+            </td>
+            <td><strong>{{ item.conteggio }}</strong></td>
+            <td>{{ item.spesaMensileNetta | currency:'EUR':'symbol':'1.0-0' }}</td>
+            <td>{{ item.spesaAnnualeNetta | currency:'EUR':'symbol':'1.0-0' }}</td>
+            <td><strong>{{ item.costoAnnualeAzienda | currency:'EUR':'symbol':'1.0-0' }}</strong></td>
+            <td class="progress-cell">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" [style.width.%]="item.percentuale"></div>
+              </div>
+              <span class="progress-text">{{ item.percentuale | number:'1.0-1' }}%</span>
+            </td>
+          </tr>
+          <tr *ngIf="statsPerRuolo().length === 0">
+            <td colspan="6" class="no-data">Nessun dipendente trovato per elaborare le statistiche.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>

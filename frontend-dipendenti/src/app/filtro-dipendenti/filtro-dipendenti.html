@@ -1,0 +1,80 @@
+<div class="filter-card-container">
+  <div class="filter-card-header">
+    <h3>🔍 Ricerca Dipendenti</h3>
+    @if (isFiltrato()) {
+      <span class="badge-filtrato">Filtro Attivo</span>
+    }
+  </div>
+  
+  <div class="filter-card-body">
+    <!-- SEZIONE 1: RICERCA DIRETTA PER EMAIL -->
+    <div class="filter-section-single">
+      <div class="filter-field">
+        <label>Cerca per Email Singola</label>
+        <div class="input-btn-group">
+          <input 
+            type="email" 
+            [ngModel]="filtroEmail()" 
+            (ngModelChange)="filtroEmail.set($event)" 
+            placeholder="mario.rossi@azienda.com" 
+            class="form-control-sm"
+          />
+          <button 
+            type="button" 
+            class="btn-filter-sm" 
+            (click)="onCercaEmail()" 
+            [disabled]="!filtroEmail().trim()">
+            Cerca Email
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="filter-divider">
+
+    <!-- SEZIONE 2: FILTRO PER RUOLO E STIPENDIO -->
+    <div class="filter-grid">
+      <div class="filter-field">
+        <label>Ruolo</label>
+        <select 
+          [ngModel]="filtroRuolo()" 
+          (ngModelChange)="filtroRuolo.set($event)" 
+          class="form-control-sm">
+          <option value="" selected>Tutti i Ruoli</option>
+          @for (r of ruoli(); track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Stipendio Minimo (€)</label>
+        <input 
+          type="number" 
+          [ngModel]="filtroStipendio()" 
+          (ngModelChange)="filtroStipendio.set($event !== null && $event !== '' ? +$event : null)" 
+          placeholder="es. 1500" 
+          class="form-control-sm"
+        />
+      </div>
+    </div>
+
+    <!-- AZIONI GLOBALI -->
+    <div class="filter-actions">
+      <button 
+        type="button" 
+        class="btn-filter" 
+        (click)="onCerca()" 
+        [disabled]="!canSearch()"
+      >
+        Filtra per Ruolo/Stipendio
+      </button>
+
+      @if (isFiltrato()) {
+        <button type="button" class="btn-reset" (click)="onReset()">
+          ✕ Annulla Filtri
+        </button>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,225 @@
+<div style="padding: 20px; border: 1px solid #ccc; border-radius: 8px; margin: 20px; font-family: Arial; max-width: 500px; background-color: #f9f9f9;">
+  <h3 style="color: #2e7d32; margin-top: 0;">Inserisci Nuovo Dipendente</h3>
+  
+  <form [formGroup]="formInserimento" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column; gap: 10px;">
+  
+  <h4 style="margin: 0; color: #555;">Dati Anagrafici e Lavorativi</h4>
+
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+  <label>Nome:</label>
+  <input 
+    type="text" 
+    formControlName="nome" 
+    placeholder="Es. Mario"
+    [style.border-color]="isCampoInvalido('nome') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+  >
+  @if (isCampoInvalido('nome')) {
+    <small style="color: #d32f2f; font-size: 12px;">Il nome è obbligatorio.</small>
+  }
+</div>
+
+
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Cognome:</label>
+    <input 
+    type="text"
+    formControlName="cognome"
+    placeholder="Es. Rossi"
+    [style.border-color]="isCampoInvalido('cognome') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+    >
+      @if (isCampoInvalido('cognome')) {
+    <small style="color: #d32f2f; font-size: 12px;">Il Cognome è obbligatorio.</small>
+  }
+  </div>
+
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Eta:</label>
+    <input 
+    type="number"
+    formControlName="eta"
+    placeholder="Es. 30"
+    [style.border-color]="isCampoInvalido('eta') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+    >
+      @if (isCampoInvalido('eta')) {
+    <small style="color: #d32f2f; font-size: 12px;">L eta è obbligatorio.</small>
+  }
+  </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Email Personale:</label>
+    <input 
+    type="email"
+    formControlName="email"
+    placeholder="Es. mossi@.gmail.com"
+    [style.border-color]="isCampoInvalido('email') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+    >
+      @if (isCampoInvalido('email')) {
+    <small style="color: #d32f2f; font-size: 12px;">L email è obbligatorio.</small>
+  }
+  </div>
+
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Data di nascita:</label>
+    <input 
+    type="date"
+    formControlName="dataNascita"
+    placeholder="01/01/2000"
+    [style.border-color]="isCampoInvalido('dataNascita') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+    >
+      @if (isCampoInvalido('dataNascita')) {
+    <small style="color: #d32f2f; font-size: 12px;">La data di nascita è obbligatorio.</small>
+  }
+  </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Codice Fiscale:</label>
+    <input 
+    type="text"
+    formControlName="codiceFiscale"
+    placeholder="16 ch"
+    maxlength="16"
+    [style.border-color]="isCampoInvalido('codiceFiscale') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px; text-transform: uppercase;"
+    >
+      @if (isCampoInvalido('codiceFiscale')) {
+    <small style="color: #d32f2f; font-size: 12px;">Il Codice Fiscale è obbligatorio.</small>
+  }
+  </div>
+  
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Sipendio:</label>
+    <input 
+    type="number"
+    step="0.01"
+    formControlName="stipendio"
+    placeholder="Es. 15000.50"
+    [style.border-color]="isCampoInvalido('stipendio') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+    >
+      @if (isCampoInvalido('stipendio')) {
+    <small style="color: #d32f2f; font-size: 12px;">Il Cognome è obbligatorio.</small>
+  }
+  </div>
+
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Data Assunzione:</label>
+    <input 
+    type="date"
+    formControlName="dataAssunzione"
+    [style.border-color]="isCampoInvalido('dataAssunzione') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+    >
+      @if (isCampoInvalido('dataAssunzione')) {
+    <small style="color: #d32f2f; font-size: 12px;">La data di assunzione è obbligatorio.</small>
+  }
+  </div>
+  
+  <hr style="width: 100%; border: 1px solid #ddd; margin: 15px 0;">
+  <h4 style="margin: 0; color: #555;">Dati Account Aziendale</h4>
+
+  <!-- Sotto-gruppo Account obbligatorio per combaciare con formInserimento.get('account') -->
+  <div formGroupName="account" style="display: flex; flex-direction: column; gap: 10px;">
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Username:</label>
+    <input 
+    type="text"
+    formControlName="username"
+    placeholder="Es. mario.rossi"
+    [style.border-color]="isCampoInvalido('username','account') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+    >
+      @if (isCampoInvalido('username','account')) {
+    <small style="color: #d32f2f; font-size: 12px;">Il Username è obbligatorio.</small>
+  }
+  </div>
+      
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <label>Email Aziendale:</label>
+    <input 
+    type="email"
+    formControlName="emailAziendale"
+    placeholder="Es. mossi@.gmail.com"
+    [style.border-color]="isCampoInvalido('emailAziendale','account') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+    >
+      @if (isCampoInvalido('emailAziendale','account')) {
+    <small style="color: #d32f2f; font-size: 12px;">L email aziendale è obbligatorio.</small>
+  }
+  </div>
+    
+
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+  <label>Password:</label>
+  
+  <div style="position: relative; display: flex; align-items: center;">
+    <input 
+      [type]="mostraPassword ? 'text' : 'password'" 
+      formControlName="password" 
+      placeholder="Inserisci password"
+      [style.border-color]="isCampoInvalido('password', 'account') ? '#d32f2f' : '#ccc'"
+      style="width: 100%; padding: 8px; padding-right: 40px; box-sizing: border-box; border: 1px solid; border-radius: 4px;"
+    >
+
+    <button 
+      type="button" 
+      (click)="toggleMostraPassword()"
+      style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;"
+      [title]="mostraPassword ? 'Nascondi password' : 'Mostra password'"
+    >
+      {{ mostraPassword ? '🙈' : '👁️' }}
+    </button>
+  </div>
+
+  <!-- Gestione Messaggi di Errore -->
+  @if (isCampoInvalido('password', 'account')) {
+    <div style="color: #d32f2f; font-size: 12px; display: flex; flex-direction: column; gap: 2px;">
+      @if (formInserimento.get('account.password')?.hasError('required')) {
+        <small>La password è obbligatoria.</small>
+      }
+      @if (formInserimento.get('account.password')?.hasError('minlength')) {
+        <small>La password deve contenere almeno 8 caratteri.</small>
+      }
+    </div>
+  }
+</div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px;" formGroupName="account">
+  <label>Ruolo:</label>
+  
+  <select 
+    formControlName="ruolo" 
+    [style.border-color]="isCampoInvalido('ruolo', 'account') ? '#d32f2f' : '#ccc'"
+    style="padding: 8px; border: 1px solid; border-radius: 4px;"
+  >
+    <option value="" disabled selected>Seleziona un ruolo</option>
+
+    <!-- Ciclo dinamico sui valori dell'Enum -->
+    @for (ruolo of ruoli; track ruolo) {
+      <option [value]="ruolo">{{ ruolo }}</option>
+    }
+  </select>
+  @if (isCampoInvalido('ruolo', 'account')) {
+    <small style="color: #d32f2f; font-size: 12px;">Selezionare un ruolo obbligatorio.</small>
+  }
+</div>
+  </div>
+  
+  <button type="submit" [disabled]="formInserimento.invalid" 
+          style="margin-top: 15px; padding: 12px; background-color: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+    Salva Dipendente
+  </button>
+  
+  @if (messaggio) {
+    <p style="font-weight: bold; text-align: center; color: #d32f2f;">{{ messaggio }}</p>
+  }
+</form>
+</div>
